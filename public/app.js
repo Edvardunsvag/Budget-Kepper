@@ -43,10 +43,10 @@ var budgetController = (function(){
             });
         } else if (data.currency === 'EUR' && data.prevCurrency === 'NOK'){
             data.allItems.inc.forEach(function(cur){
-                cur.value = cur.value * 0.09;
+                cur.value = cur.value / 11;
             });
             data.allItems.exp.forEach(function(cur){
-                cur.value = cur.value * 0.09;
+                cur.value = cur.value / 11;
             });
         }
     };
