@@ -36,17 +36,17 @@ var budgetController = (function(){
 
         if (data.currency === 'NOK' && data.prevCurrency === 'EUR'){
             data.allItems.inc.forEach(function(cur){
-                cur.value = cur.value * 11;
+                cur.value = cur.value * 11.25;
             });
             data.allItems.exp.forEach(function(cur){
-                cur.value = cur.value * 11;
+                cur.value = cur.value * 11.25;
             });
         } else if (data.currency === 'EUR' && data.prevCurrency === 'NOK'){
             data.allItems.inc.forEach(function(cur){
-                cur.value = cur.value / 11;
+                cur.value = cur.value / 11.25;
             });
             data.allItems.exp.forEach(function(cur){
-                cur.value = cur.value / 11;
+                cur.value = cur.value / 11.25;
             });
         }
     };
@@ -119,6 +119,16 @@ var budgetController = (function(){
             })
         },
 
+        getObject : function(type, id){
+            var returnObject;
+            data.allItems[type].forEach(function(current){
+                if(current.id === id){
+                    returnObject = current;
+                }
+            });
+            return returnObject;
+        },
+
         getPercentages : function(){
             percentagesArr = data.allItems.exp.map(function(current){
                 return current.percentage;
@@ -148,6 +158,19 @@ var budgetController = (function(){
                 totalExpense : data.total.exp
             };
 
+        },
+
+        editItem : function(type, id, newDescription){
+            var ids, index;
+            console.log(type);
+            console.log(data.allItems);
+            data.allItems[type].forEach(function(current){
+                if(current.id == id){
+                    console.log(current.id);
+                    current.description = newDescription;
+                    console.log(current.description);
+                }
+            });
         },
 
         deleteItem : function(type, id){
@@ -209,7 +232,9 @@ var UIController = (function(){
         changeColorLabel : ".add__type",
         currencyLabel : ".add__currency",
         itemValueInc : ".item__value__inc",
-        itemValueExp : ".item__value__exp"
+        itemValueExp : ".item__value__exp",
+        editLabel : "edit_btn",
+        editIncomesLabel : ".edit_incomes"
     };
 
     var formatNumber = function(num, type, currency){
@@ -253,11 +278,11 @@ var UIController = (function(){
 
             if (type === 'inc'){
                 element = DOMstring.incomeContainer;
-                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value__inc">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+                html = '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><input type="text" placeholder ="Edit here" class="myText"><button class = "edit_btn">Edit budget</button><div class="right clearfix"><div class="item__value__inc">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
             }
             else if(type === 'exp'){
                 element = DOMstring.expensesContainer;
-                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value__exp">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><input type="text" placeholder ="Edit here" class="myText"><button class = "edit_btn">Edit budget</button><div class="right clearfix"><div class="item__value__exp">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>'
             }
 
             newHtml = html.replace('%id%', obj.id);
@@ -284,6 +309,11 @@ var UIController = (function(){
         deleteListItem : function(selectorID){
             var item = document.getElementById(selectorID);
             item.remove();
+        },
+
+        editListItem : function(selectorID, obj){
+            document.getElementById(selectorID).querySelector('.item__description').textContent = obj.description;
+
         },
 
         getDOMstring : function(){
@@ -341,9 +371,10 @@ var UIController = (function(){
 
         displayMonth : function(){
             var d = new Date();
+            var y = d.getFullYear()
             var n = d.getMonth();
             var months = ["January", "February", "March", "April"]
-            document.querySelector(DOMstring.monthLabel).textContent = months[n];
+            document.querySelector(DOMstring.monthLabel).textContent = months[n] + " - " + y;
         },
 
         changedType : function(){
@@ -357,6 +388,44 @@ var UIController = (function(){
                 current.classList.toggle('red-focus');
             });
             document.querySelector(DOMstring.inputBtn).classList.toggle('red')
+
+        },
+
+        hideEdit : function(){
+            var inputEdit = document.querySelectorAll('.myText');
+            var editEdit = document.querySelectorAll('.edit_btn')
+
+
+            var editInput = Array.from(inputEdit);
+            var editButton = Array.from(editEdit)
+
+            editInput.forEach(function(current){
+                current.style.display = "none";
+            })
+
+            editButton.forEach(function(current){
+                current.style.display = "none";
+            })
+
+        },
+
+        showEdit : function(){
+            var inputEdit = document.querySelectorAll('.myText');
+            var editEdit = document.querySelectorAll('.edit_btn')
+
+
+            var editInput = Array.from(inputEdit);
+            var editButton = Array.from(editEdit)
+
+            editInput.forEach(function(current){
+                current.style.display = "inline"
+            })
+
+            editButton.forEach(function(current){
+                current.style.display = "inline"
+            })
+
+            document.querySelector(".myText").focus();
 
         }
 
@@ -407,7 +476,7 @@ var controller = (function(budgetCtrl, UICtrl){
 
         //henter fra DOM variabel over. Utfører click når man trykker på DOM.container.
         document.querySelector(DOM.container).addEventListener('click', function(){
-            ctrlDeleteItem(event);
+            ctrlDeleteOrEditItem(event);
         });
 
         document.querySelector(DOM.changeColorLabel).addEventListener("change", function(){
@@ -418,6 +487,15 @@ var controller = (function(budgetCtrl, UICtrl){
             changeCurrency(event);
 
         });
+
+        document.querySelector(DOM.editIncomesLabel).addEventListener('click', function(){
+            UICtrl.showEdit();
+
+        })
+
+
+
+
     }
 
     var changeCurrency = function(event){
@@ -461,15 +539,34 @@ var controller = (function(budgetCtrl, UICtrl){
             //6. updatePercentages
             updatePercentages();
 
+            UICtrl.hideEdit()
+
 
 
         }
 
     };
 
-    var ctrlDeleteItem = function(event){
+    var ctrlDeleteOrEditItem = function(event){
         var itemId, splitID, type, id;
         itemId = event.target.parentNode.parentNode.parentNode.parentNode.id;
+        itemIdEdit = event.target.parentNode.id;
+
+        if (event.target.className === 'edit_btn'){
+            splitID = itemIdEdit.split('-');
+            type = splitID[0];
+            id = parseInt(splitID[1]);
+            var input = document.getElementById(itemIdEdit).querySelector(".myText").value;
+
+            budgetCtrl.editItem(type, id, input);
+
+            var obj = budgetCtrl.getObject(type, id);
+
+            UICtrl.editListItem(itemIdEdit, obj);
+
+            UICtrl.hideEdit()
+
+        }
 
         if (itemId){
             splitID = itemId.split('-');
