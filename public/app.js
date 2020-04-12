@@ -1,4 +1,4 @@
-
+/*jshint esversion: 6 */
 
 //BUDGET CONTROLLER
 var budgetController = (function(){
@@ -23,14 +23,20 @@ var budgetController = (function(){
         this.value = value;
     };
 
-    var calculateTotal = function(type){
+    let calculateTotal = (type) => {
         var sum = 0;
         data.allItems[type].forEach(function(cur){
             sum += cur.value
         });
 
         data.total[type] = sum;
-    }
+    };
+
+    var persistData = function(type) {
+        localStorage.setItem(type, JSON.stringify(data.allItems.inc));
+        console.log(localStorage);
+    };
+
 
     var updateCurrencyValue = function(){
 
@@ -88,6 +94,7 @@ var budgetController = (function(){
 
             //push it into data structure. [type] find the array with the name of type
             data.allItems[type].push(newItem);
+            persistData(type)
             return newItem
         },
 
@@ -100,8 +107,6 @@ var budgetController = (function(){
             //calc total exp and inc
             calculateTotal('exp');
             calculateTotal('inc');
-
-
 
             data.budget = data.total.inc - data.total.exp
 
@@ -160,6 +165,28 @@ var budgetController = (function(){
 
         },
 
+
+
+        readStorageIncome : function() {
+            var storage = JSON.parse(localStorage.getItem('inc'));
+
+            //restore the likes from local storage
+            if (storage) {
+                data.allItems.inc = storage;
+            }
+            return data.allItems.inc;
+        },
+
+        readStorageExpense : function() {
+            var storage = JSON.parse(localStorage.getItem('exp'));
+
+            //restore the likes from local storage
+            if (storage) {
+                data.allItems.exp = storage;
+            }
+            return data.allItems.exp;
+        },
+
         editItem : function(type, id, newDescription){
             var ids, index;
             console.log(type);
@@ -184,6 +211,7 @@ var budgetController = (function(){
             if(index !== -1){
                 data.allItems[type].splice(index, 1);
             }
+            persistData(type)
         },
 
         updateCurrency : function(event){
@@ -491,12 +519,31 @@ var controller = (function(budgetCtrl, UICtrl){
         document.querySelector(DOM.editIncomesLabel).addEventListener('click', function(){
             UICtrl.showEdit();
 
+        });
+
+        window.addEventListener('load', function(){
+            persistDataController();
         })
+    }
+
+    var persistDataController = function(){
+        const valInc = budgetCtrl.readStorageIncome()
+        const valExp = budgetCtrl.readStorageExpense()
+        valInc.forEach(function(cur){
+            UICtrl.addListItem(cur, 'inc', budgetCtrl.getCurrency())
+        });
+
+        valExp.forEach(function(cur){
+            UICtrl.addListItem(cur, 'exp', budgetCtrl.getCurrency())
+        });
 
 
 
+        UICtrl.hideEdit()
 
     }
+
+
 
     var changeCurrency = function(event){
         //1. get currency
