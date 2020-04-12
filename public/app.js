@@ -33,7 +33,7 @@ var budgetController = (function(){
     };
 
     var persistData = function(type) {
-        localStorage.setItem(type, JSON.stringify(data.allItems.inc));
+        localStorage.setItem(type, JSON.stringify(data.allItems[type]));
         console.log(localStorage);
     };
 
